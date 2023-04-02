@@ -1,44 +1,28 @@
-use sqlx::{Pool, postgres};
+use sqlx::{Pool, Postgres};
 
-pub type Db= pool<Postgres>;
+const PG_HOST: &str = "localhost";
+const PG_ROOT_DB: &str = "postgres";
+const PG_ROOT_USER: &str = "postgres";
+const PG_ROOT_PWD: &str = "postgres";
 
 
-const PG_HOST: &str= "localhost";
-const PG_ROOT_DB: &str= "postgres";
-const PG_ROOT_USER: &str= "postgres";
-const PG_ROOT_PWD: &str= "postgres";
+pub async fn init_db() -> Result<Db, sqlx::Error> {
 
-pub async fn init_db() -> Result<DB, sqlx::error> {
-    new_db_pool(PG_HOST, PG_ROOT_DB, PG_ROOT_USER, PG_ROOT_PWD, 1)
+
+    return new_db_pool(PG_HOST, PG_APP_DB, PG_APP_USER, PG_APP_PWD, 1).await;
 }
 
-
-async fn new_db_pool(host &str, db: &str, user: &str, pwd: &str, max_con: u32) -> Result<Db, sqlx::Error> {
+pub type Db= Pool<Postgres>;
+async fn new_db_pool(host: &str, db: &str, user: &str, pwd: &str, max_con: u32) -> Result<Db, sqlx::Error>{
     let con_string= format!("postgres://{}:{}@{}/{}", user, pwd, host, db);
-    PgPoolOptions::new()
-        .max_connection(max_con)
-        .connect_timeout(Duration::from::millis(500))
+    
+    return PgPoolOptions::new()
+        .max_connections(max_con)
+        .connect_timeout(Duration::from_millies(500))
         .connect(&con_string)
-        .await
-}
-
-async fn pexec(db: &Db, file: &str) -> Result<(), sqlx::Error> {
-    let content= fs::read_to_string(file).map_err(|ex| {
-        println!("ERROR reading {} {cause: {:?}", file, ex);
-        ex
-    })?;
-
-    let sqls: Vec<&str>= content.splite(";").collect();
-
-    Ok(())
+        .await;
 }
 
 #[cfg(test)]
-mod tests{
-    use super::init_db;
-    
-    #[tokio::test]
-    async fn model_db_init_db() -> Result<(), Box<dyn std::error::Error>{
-        Ok(())
-    }
-}
+#[path= "../_test/mode_db.rs"]
+mod tests;
